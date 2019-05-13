@@ -198,6 +198,7 @@ if [ -z `echo "${basicPorts}"` ]; then
         echo -e "${YELLOW}Making a script scan on all ports"
         echo -e "${NC}"
         $nmapType -sCV -p`echo "${allPorts}"` -oN nmap/Full_$1.nmap $1
+	assignPorts $1
 else
 	cmpPorts $1
 	if [ -z `echo "${extraPorts}"` ]; then
@@ -213,6 +214,7 @@ else
         	echo -e "${YELLOW}Making a script scan on extra ports: `echo "${extraPorts}" | sed 's/,/, /g'`"
         	echo -e "${NC}"
         	$nmapType -sCV -p`echo "${extraPorts}"` -oN nmap/Full_$1.nmap $1
+		assignPorts $1
 	fi
 fi
 
@@ -372,6 +374,7 @@ if [[ ! -z `echo "${file}" | grep -w "445/tcp"` ]]; then
 	echo -e "${YELLOW}SMB Recon:"
 	echo -e "${NC}"
 	echo "smbmap -H $1 | tee recon/smbmap_$1.txt"
+	echo "smbclient -L \"//$1/\" -U \"guest\"% | tee recon/smbclient_$1.txt"
 	if [[ $osType == "Windows" ]]; then
 		echo "nmap -Pn -p445 --script vuln -oN recon/SMB_vulns_$1.txt $1"
 	fi
@@ -502,6 +505,12 @@ else
 fi
 
 if [[ "$2" =~ ^(Quick|Basic|UDP|Full|Vulns|Recon|All)$ ]]; then
+	if [[ ! -d $1 ]]; then
+	        mkdir $1
+	fi
+
+	cd $1
+	
 	if [[ ! -d nmap/ ]]; then
 	        mkdir nmap/
 	fi
